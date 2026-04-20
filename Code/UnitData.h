@@ -1,0 +1,42 @@
+#pragma once
+class CardData;
+class Texture;
+
+enum class UnitCategory {
+	DEALER,
+	SUPPORT,
+	MULTI,
+	TANK
+};
+class UnitData
+{
+public:
+	UnitData(wstring _name,int _maxHp,int _atk,int _def,int _spd,ElementType _type,Texture* _tex, UnitCategory _category);
+	~UnitData();
+public:
+	CardData* GetCardRandom();
+	wstring GetName() const { return m_name; }
+	wstring GetDescription() const { return m_description; }
+	int GetMaxHp() const { return m_maxHp; }
+	int GetAtk() const { return m_atk; }
+	int GetDef() const { return m_def; }
+	int GetSpeed() const { return m_speed; }
+	void SetCard(CardData* card, int cnt=1);
+	void UseCard(int index);
+
+	vector<CardData*> GetDeck() const { return m_deck; }
+	Texture* GetTexture() const { return m_pTexture; }
+	ElementType GetElementType() const { return m_elementType; }
+private:
+	wstring m_name;
+	wstring m_description;
+	int m_maxHp;
+	int m_atk;
+	int m_def;
+	int m_speed;
+	Texture* m_pTexture;
+	ElementType m_elementType;
+	vector<int> m_usedIndexs;
+	vector<CardData*> m_deck;
+};
+

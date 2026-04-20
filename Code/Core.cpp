@@ -1,0 +1,95 @@
+#include "pch.h"
+#include "Core.h"
+#include "TimeManager.h"
+#include "InputManager.h"
+#include "SceneManager.h"
+#include "ResourceManager.h"
+#include "CardManager.h"
+#include "UnitManager.h"
+#include "StageManager.h"
+#include "CombatManager.h"
+bool Core::Init(HWND _hWnd)
+{
+    m_hWnd = _hWnd;
+    m_hDC = ::GetDC(m_hWnd);
+    /*m_obj.SetPos({WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2});
+    m_obj.SetSize({ 100,100 });*/
+    
+    m_hBackBit = 0;
+    m_hBackDC = 0;
+
+    // 더블버퍼링
+    // 1. 필요한 작업 세팅
+    // 도화지를 만드는거고
+    m_hBackBit = ::CreateCompatibleBitmap(m_hDC, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+    // 호환되는 DC를 만들어주세요
+    m_hBackDC = ::CreateCompatibleDC(m_hDC);
+
+    // 2. 연결
+    ::SelectObject(m_hBackDC, m_hBackBit);
+
+    // == Manager == 
+
+    GET_SINGLE(TimeManager)->Init();
+    GET_SINGLE(InputManager)->Init();
+    if (!GET_SINGLE(ResourceManager)->Init())
+        return false;
+    GET_SINGLE(SceneManager)->Init();
+    GET_SINGLE(CardManager)->Init();
+	GET_SINGLE(UnitManager)->Init();
+	GET_SINGLE(CombatManager)->Init();
+    return true;
+}
+
+void Core::CleanUp()
+{
+    ::DeleteDC(m_hBackDC);
+    ::DeleteObject(m_hBackBit);
+    ::ReleaseDC(m_hWnd, m_hDC);
+	GET_SINGLE(CardManager)->Release();
+	GET_SINGLE(SceneManager)->Release();
+	GET_SINGLE(UnitManager)->Release();
+	GET_SINGLE(CombatManager)->Release();
+	GET_SINGLE(StageManager)->Release();
+    GET_SINGLE(ResourceManager)->Release();
+}
+
+void Core::ExitGame()
+{
+    PostQuitMessage(0);
+}
+void Core::MainUpdate()
+{
+    // == Manager == 
+    GET_SINGLE(TimeManager)->Update();
+    {
+        static float accmulator = 0.f;
+        const float fixedDT = 1.f / 60.f;
+        accmulator += fDT;
+        while (accmulator >= fixedDT)
+        {
+            GET_SINGLE(SceneManager)->FixedUpdate(fixedDT);
+            accmulator -= fixedDT;
+        }
+    }
+    GET_SINGLE(InputManager)->Update();
+    GET_SINGLE(ResourceManager)->FmodUpdate();
+    GET_SINGLE(SceneManager)->Update();
+}
+void Core::MainRender()
+{
+    ::PatBlt(m_hBackDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, WHITENESS);
+    
+    GET_SINGLE(SceneManager)->Render(m_hBackDC);
+
+    ::BitBlt(m_hDC, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, m_hBackDC, 0, 0, SRCCOPY);
+}
+
+void Core::GameLoop()
+{
+    MainUpdate();
+    MainRender();
+    GET_SINGLE(SceneManager)->GetCurScene()->FlushEvent();
+}
+

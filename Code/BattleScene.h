@@ -1,0 +1,42 @@
+#pragma once
+#include "Scene.h"
+#include "Enums.h"
+
+class CardObject;
+class CardData;
+class BattleDescription;
+class DescriptionText;
+class UnitInfoObj;
+class DeckUIObj;
+class ActionData;
+class BattleScene : public Scene
+{
+public:
+    void Init() override;
+    void Update() override;
+	void Render(HDC _hdc) override;
+	void Release() override;
+public:
+    void SetCardDes(CardData* _data);
+    void SetDes(ActionData* data);
+    void SetCardData();
+    void SetWaitTurn(bool _isWait);
+   
+private:
+	void OnOffInfo(bool _isOn);
+	void OnOffHand(bool _isOn);
+	void OnOffDeck(bool _isOn);
+    void SelectHand();
+    UnitType AskTargetUnit();
+
+private:
+	BattleDescription* m_battleDescription = nullptr;
+    bool m_waitTurn = false;
+	DescriptionText* m_descriptionText = nullptr;
+    vector<CardObject*> m_cardObjs;
+	DeckUIObj* m_deckUIObj = nullptr;
+	UnitInfoObj* m_unitInfoObj = nullptr;
+    int      m_handIndex = 0;
+    UIType   m_uiType = UIType::NONE;
+};
+
